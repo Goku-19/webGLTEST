@@ -74,7 +74,6 @@
 
         loadingBar.style.display = "block";
 
-        // Request camera access just before loading the Unity instance
         function requestCameraAndLoadUnity() {
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
