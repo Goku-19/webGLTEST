@@ -20,33 +20,6 @@
         <div id="unity-warning"></div>
     </div>
     <script>
-        // Request camera access
-        function requestCameraAccess() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    console.log("Camera access granted.");
-                    // You can use the stream if needed, e.g., display it in a video element
-                })
-                .catch(err => {
-                    console.error("Error accessing the camera: ", err);
-                    alert("Camera access is required for this application to work.");
-                });
-        }
-
-        // Call the function when the window loads
-        window.onload = function() {
-            requestCameraAccess();
-            if ("serviceWorker" in navigator) {
-                navigator.serviceWorker.register("ServiceWorker.js");
-            }
-        };
-
-        var container = document.querySelector("#unity-container");
-        var canvas = document.querySelector("#unity-canvas");
-        var loadingBar = document.querySelector("#unity-loading-bar");
-        var progressBarFull = document.querySelector("#unity-progress-bar-full");
-        var warningBanner = document.querySelector("#unity-warning");
-
         // Shows a temporary message banner/ribbon for a few seconds, or
         // a permanent error message on top of the canvas if type=='error'.
         // If type=='warning', a yellow highlight color is used.
@@ -101,18 +74,46 @@
 
         loadingBar.style.display = "block";
 
-        var script = document.createElement("script");
-        script.src = loaderUrl;
-        script.onload = () => {
-            createUnityInstance(canvas, config, (progress) => {
-                progressBarFull.style.width = 100 * progress + "%";
-            }).then((unityInstance) => {
-                loadingBar.style.display = "none";
-            }).catch((message) => {
-                alert(message);
-            });
-        };
-        document.body.appendChild(script);
+        // Request camera access just before loading the Unity instance
+        function requestCameraAndLoadUnity() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    console.log("Camera access granted.");
+                    loadUnityInstance();
+                })
+                .catch(err => {
+                    console.error("Error accessing the camera: ", err);
+                    alert("Camera access is required for this application to work.");
+                });
+        }
+
+        function loadUnityInstance() {
+            var script = document.createElement("script");
+            script.src = loaderUrl;
+            script.onload = () => {
+                createUnityInstance(canvas, config, (progress) => {
+                    progressBarFull.style.width = 100 * progress + "%";
+                }).then((unityInstance) => {
+                    loadingBar.style.display = "none";
+                }).catch((message) => {
+                    alert(message);
+                });
+            };
+            document.body.appendChild(script);
+        }
+
+        window.addEventListener("load", function () {
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register("ServiceWorker.js");
+            }
+            requestCameraAndLoadUnity();
+        });
+
+        var container = document.querySelector("#unity-container");
+        var canvas = document.querySelector("#unity-canvas");
+        var loadingBar = document.querySelector("#unity-loading-bar");
+        var progressBarFull = document.querySelector("#unity-progress-bar-full");
+        var warningBanner = document.querySelector("#unity-warning");
     </script>
 </body>
 </html>
